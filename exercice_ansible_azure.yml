@@ -1,0 +1,102 @@
+- name: Déploiement d'une VM sur Azure avec Ansible
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  
+  vars_files:
+    - vault_password.yml
+
+  vars:
+    resource_group: "ResourceGroupClementineMadjidAudrey"
+    location: "eastus"
+    vnet_name: "VNetCMA"
+    subnet_name: "SubnetCMA"
+    nsg_name: "NSGCMA"
+    vm_name: "serverCMA"
+    vm_size: "Standard_B1s"
+    ssh_key_path: "~/.ssh/id_rsa.pub"
+    image_offer: "0001-com-ubuntu-server-jammy"
+    image_publisher: "Canonical"
+    image_sku: "22_04-lts"
+    image_version: "latest"
+    public_ip_name: "PublicIPCMA"
+    nic_name: "NICCMA"
+    admin_user: "usercma"
+    
+  tasks:
+
+    - name: Créer le Resource Group
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: "{{ location }}"
+
+    - name: Créer le Virtual Network
+      azure.azcollection.azure_rm_virtualnetwork:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vnet_name }}"
+        address_prefixes: "10.0.0.0/16"
+
+    - name: Créer le Subnet
+      azure.azcollection.azure_rm_subnet:
+        resource_group: "{{ resource_group }}"
+        virtual_network: "{{ vnet_name }}"
+        name: "{{ subnet_name }}"
+        address_prefix: "10.0.1.0/24"
+
+    - name: Créer une IP publique
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ resource_group }}"
+        name: "{{ public_ip_name }}"
+        allocation_method: "Static"
+
+    - name: Créer un Network Security Group (NSG)
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ resource_group }}"
+        name: "{{ nsg_name }}"
+        rules:
+          - name: "AllowSSH"
+            priority: 1001
+            direction: "Inbound"
+            access: "Allow"
+            protocol: "Tcp"
+            source_port_range: "*"
+            destination_port_range: "22"
+            source_address_prefix: "*"
+            destination_address_prefix: "*"
+      
+    - name: Créer une interface réseau (NIC)
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ resource_group }}"
+        name: "{{ nic_name }}"
+        virtual_network: "{{ vnet_name }}"
+        subnet: "{{ subnet_name }}"
+        security_group: "{{ nsg_name }}"
+        location: "{{ location }}"
+        ip_configurations:
+          - name: "ipconfig1"
+            public_ip_address_name: "{{ public_ip_name }}"
+
+    - name: Créer la machine virtuelle
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ resource_group }}"
+        name: "{{ vm_name }}"
+        vm_size: "{{ vm_size }}"
+        admin_username: "{{ admin_user }}"
+        admin_password: "{{ user_password }}"
+        ssh_password_enabled: true
+        network_interfaces: "{{ nic_name }}"
+        image:
+          offer: "{{ image_offer }}"
+          publisher: "{{ image_publisher }}"
+          sku: "{{ image_sku }}"
+          version: "{{ image_version }}"
+
+    - name: Afficher l'adresse IP publique
+      azure.azcollection.azure_rm_publicipaddress_info:
+        resource_group: "{{ resource_group }}"
+        name: "{{ public_ip_name }}"
+      register: public_ip_info
+
+    - name: Afficher l'IP de la VM
+      debug:
+        msg: "L'adresse IP publique de la VM est {{ public_ip_info.publicipaddresses[0].ip_address }}"
