@@ -20,6 +20,7 @@ Sur notre machine avec ansible nous devons avoir :
 
 Nous pouvons lancer les commandes suivantes pour préparer notre environnement : 
 
+```
 uv python install
 uv venv ansible_ipi
 ansible_ipi/bin/activate
@@ -37,16 +38,16 @@ alias pip="uv tool run pip"
 alias ansible="uv tool run ansible"
 alias ansible-playbook="uv tool run ansible-playbook"
 alias ansible-vault="uv tool run ansible-vault"
-Voici le Bash d'installation:
+```
 
 Avant d'éxecuter le playbook, nous devons créer un fichier "vaulté" pour stocker le mot de passe de l'user qui sera utilisé pour se connecter à la VM :
-
+```
 ansible-vault create vault_password.yml
-
+```
 Commande pour lancer le playbook : 
-
+```
 ansible-playbook --ask-vault-pass exercice_ansible_azure.yml
-
+```
 On peut alors vérifier que le playbook s'est bien déroulé et que dans Azure on retrouve bien toutes les ressources crées :
 
 ![image](https://github.com/user-attachments/assets/a2aab83e-f98b-482a-8b1d-8bc14109617c)
