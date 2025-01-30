@@ -16,15 +16,6 @@ Sur notre machine avec ansible nous devons avoir :
 - gnupg installé
 - installer uv
 
-
--   Étape 1 : Installation des outils nécessaires
-
-Mettre à jour les paquets et installer curl :
-sudo apt update -y sudo apt install curl
-
-Installer uv (Universal Version Manager) :
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
 Nous pouvons lancer les commandes suivantes pour préparer notre environnement : 
 
 uv python install
