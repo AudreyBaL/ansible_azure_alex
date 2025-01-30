@@ -3,12 +3,12 @@ Cours INFR010 - Ansible avec Alex Faivre pour CAPGIPI6
 Audrey Balagué, grandement aidée par : Jonathan Genthon, Fayard Elise, Clémentine Dauchot et Madjid Chabane
 
 L'exercice consiste dans le fait de créer un playbook ansible permettant de créer une VM sur Azure avec :
-Un virtual Network
-Un resource group
-Un subnet
-Une VM
-Un IP publique associée à la VM (pour pinguer depuis l'extérieur)
-un Network Security Group (firewall) permettant de faire du SSH sur votre VM Linux ou du RDP sur Windows (attention plus difficile)
+- Un virtual Network
+- Un resource group
+- Un subnet
+- Une VM
+- Un IP publique associée à la VM (pour pinguer depuis l'extérieur)
+- un Network Security Group (firewall) permettant de faire du SSH sur votre VM Linux ou du RDP sur Windows (attention plus difficile)
 
 Avant de commencer à créer le playbook il est nécessaire de s'assurer que nous avons bien un compte Azure actif ayant les droits pour créer des ressources.
 
