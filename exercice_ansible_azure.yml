@@ -4,9 +4,9 @@
   gather_facts: no
   
   vars_files:
-    - vault_password.yml
+    - vault_password.yml  # Le fichier contient le mot de passe, on doit retrouver user_password: suivi du mot de passe
 
-  vars:
+  vars: # Définition des différentes variables qui seront appelées dans le playbook
     resource_group: "ResourceGroupClementineMadjidAudrey"
     location: "eastus"
     vnet_name: "VNetCMA"
@@ -25,36 +25,36 @@
     
   tasks:
 
-    - name: Créer le Resource Group
+    - name: Créer le Resource Group # On créé le groupe de ressource dans un premier temps, il regroupera toutes nos ressources
       azure.azcollection.azure_rm_resourcegroup:
         name: "{{ resource_group }}"
         location: "{{ location }}"
 
-    - name: Créer le Virtual Network
+    - name: Créer le Virtual Network # Création du réseau virtuel
       azure.azcollection.azure_rm_virtualnetwork:
         resource_group: "{{ resource_group }}"
         name: "{{ vnet_name }}"
         address_prefixes: "10.0.0.0/16"
 
-    - name: Créer le Subnet
+    - name: Créer le Subnet # Création du sous réseau
       azure.azcollection.azure_rm_subnet:
         resource_group: "{{ resource_group }}"
         virtual_network: "{{ vnet_name }}"
         name: "{{ subnet_name }}"
         address_prefix: "10.0.1.0/24"
 
-    - name: Créer une IP publique
+    - name: Créer une IP publique # Création d'un IP publique, elle sera utilisée dans notre interface réseau et associée à notre VM
       azure.azcollection.azure_rm_publicipaddress:
         resource_group: "{{ resource_group }}"
         name: "{{ public_ip_name }}"
         allocation_method: "Static"
 
-    - name: Créer un Network Security Group (NSG)
+    - name: Créer un Network Security Group (NSG) # Création du groupe de sécurité
       azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ resource_group }}"
         name: "{{ nsg_name }}"
         rules:
-          - name: "AllowSSH"
+          - name: "AllowSSH" # Régle pour autoriser la connexion SSH
             priority: 1001
             direction: "Inbound"
             access: "Allow"
@@ -63,8 +63,17 @@
             destination_port_range: "22"
             source_address_prefix: "*"
             destination_address_prefix: "*"
+          - name: "AllowICMP"  # Règle pour autoriser le ping
+            priority: 1002
+            direction: "Inbound"
+            access: "Allow"
+            protocol: "ICMP"
+            source_port_range: "*"
+            destination_port_range: "*"
+            source_address_prefix: "*"
+            destination_address_prefix: "*"
       
-    - name: Créer une interface réseau (NIC)
+    - name: Créer une interface réseau (NIC) # Création de notre interface réseau
       azure.azcollection.azure_rm_networkinterface:
         resource_group: "{{ resource_group }}"
         name: "{{ nic_name }}"
@@ -76,14 +85,14 @@
           - name: "ipconfig1"
             public_ip_address_name: "{{ public_ip_name }}"
 
-    - name: Créer la machine virtuelle
+    - name: Créer la machine virtuelle # Création de la VM entant que telle
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ resource_group }}"
         name: "{{ vm_name }}"
         vm_size: "{{ vm_size }}"
         admin_username: "{{ admin_user }}"
-        admin_password: "{{ user_password }}"
-        ssh_password_enabled: true
+        admin_password: "{{ user_password }}" # Ici on récupère la valeur du mot de passe définie dans le fichier vault
+        ssh_password_enabled: true # On autorise la connexion ssh via mot de passe
         network_interfaces: "{{ nic_name }}"
         image:
           offer: "{{ image_offer }}"
@@ -97,6 +106,6 @@
         name: "{{ public_ip_name }}"
       register: public_ip_info
 
-    - name: Afficher l'IP de la VM
+    - name: Afficher l'IP de la VM 
       debug:
-        msg: "L'adresse IP publique de la VM est {{ public_ip_info.publicipaddresses[0].ip_address }}"
+        msg: "L'adresse IP publique de la VM est {{ public_ip_info.publicipaddresses[0].ip_address }}" # Cela nous permettra de tester le ping et la connexion ssh rapidement
